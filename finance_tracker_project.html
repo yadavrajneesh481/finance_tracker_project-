@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Finance Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .income { color: #28a745; }
+        .expense { color: #dc3545; }
+        .balance { color: #007bff; }
+
+        .main-content {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .form-section, .list-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+        }
+
+        .form-section h3, .list-section h3 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
+        .transaction-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .transaction-item:hover {
+            transform: translateX(5px);
+        }
+
+        .transaction-details h4 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .transaction-details p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .transaction-amount {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c62828;
+        }
+
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2e7d32;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .currency-section {
+            background: white;
+            margin: 20px 30px;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .currency-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .currency-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <h1>💰 Personal Finance Tracker</h1>
+            <p>Master your money with smart tracking</p>
+        </header>
+
+        <!-- Statistics Section -->
+        <section class="stats">
+            <div class="stat-card">
+                <div class="stat-value income" id="totalIncome">$0.00</div>
+                <div class="stat-label">Total Income</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value expense" id="totalExpense">$0.00</div>
+                <div class="stat-label">Total Expenses</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value balance" id="totalBalance">$0.00</div>
+                <div class="stat-label">Current Balance</div>
+            </div>
+        </section>
+
+        <!-- Currency Exchange Section -->
+        <section class="currency-section">
+            <h3>💱 Live Currency Exchange</h3>
+            <div id="currencyLoading" class="loading" style="display: none;">Loading exchange rates...</div>
+            <div id="currencyError" class="error" style="display: none;"></div>
+            <div class="currency-grid" id="currencyGrid"></div>
+        </section>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Form Section -->
+            <section class="form-section">
+                <h3>➕ Add Transaction</h3>
+                <div id="errorMessage" class="error" style="display: none;"></div>
+                <div id="successMessage" class="success" style="display: none;"></div>
+
+                <form id="transactionForm">
+                    <div class="form-group">
+                        <label for="description">Description *</label>
+                        <input type="text" id="description" required placeholder="e.g., Grocery shopping">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="amount">Amount *</label>
+                        <input type="number" id="amount" step="0.01" required placeholder="0.00">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="type">Type *</label>
+                        <select id="type" required>
+                            <option value="">Select type</option>
+                            <option value="income">💚 Income</option>
+                            <option value="expense">💸 Expense</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category">
+                            <option value="">Select category</option>
+                            <option value="food">🍕 Food</option>
+                            <option value="transport">🚗 Transport</option>
+                            <option value="entertainment">🎬 Entertainment</option>
+                            <option value="bills">📄 Bills</option>
+                            <option value="salary">💼 Salary</option>
+                            <option value="other">📦 Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">Notes</label>
+                        <textarea id="notes" rows="3" placeholder="Additional notes..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn">Add Transaction</button>
+                    <button type="button" class="btn" onclick="testApp()" style="margin-left: 10px; background: #28a745;">
+                        🧪 Test App
+                    </button>
+                </form>
+            </section>
+
+            <!-- Transaction List Section -->
+            <section class="list-section">
+                <h3>📊 Recent Transactions</h3>
+                <div id="transactionsList">
+                    <p style="text-align: center; color: #666; padding: 40px;">
+                        No transactions yet. Add your first transaction! 🚀
+                    </p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Modern JavaScript Finance Tracker Application
+        // This script implements a personal finance tracker with modern JS features
+        
+        // Class-based approach for better organization
+        // Define a class called FinanceTracker to encapsulate all app logic
+        class FinanceTracker {
+            // The constructor method is automatically called when a new instance of FinanceTracker is created
+            constructor() {
+                // Load existing transactions from localStorage, or use sample data if none are found
+                this.transactions = this.loadTransactions();
+                // Initialize an empty object to store currency exchange rates
+                this.exchangeRates = {};
+                // Call the init method to set up event listeners and UI
+                this.init();
+            }
+
+            // This method initializes the application and sets up the UI and event listeners
+            init() {
+                // Output a message to the browser console for debugging
+                console.log('🔧 Initializing FinanceTracker...');
+                
+                try {
+                    // Call the method that sets up form and button event listeners
+                    this.bindEvents();
+                    // Log that event listeners were set up successfully
+                    console.log('✅ Events bound successfully');
+                    
+                    // Calculate and update the statistics on the page (income, expense, balance)
+                    this.updateStats();
+                    // Log that stats were updated
+                    console.log('✅ Stats updated');
+                    
+                    // Render the list of transactions on the page
+                    this.renderTransactions();
+                    // Log that transactions were rendered
+                    console.log('✅ Transactions rendered');
+                    
+                    // Use setTimeout to delay fetching exchange rates by 100ms, ensuring the DOM is ready
+                    setTimeout(() => {
+                        // Fetch live or demo currency exchange rates and display them
+                        this.fetchExchangeRates();
+                    }, 100);
+                    
+                    // Log that initialization is complete
+                    console.log('✅ FinanceTracker initialization complete');
+                } catch (error) {
+                    // If any error occurs during initialization, log it as an error
+                    console.error('❌ Error during initialization:', error);
+                }
+            }
+
+            // This method sets up event listeners for the form and delete buttons
+            bindEvents() {
+                // Log that event binding is starting
+                console.log('🔗 Binding events...');
+                
+                // Get the form element by its ID from the DOM
+                const form = document.getElementById('transactionForm');
+                // Check if the form exists on the page
+                if (form) {
+                    // Add an event listener for the 'submit' event on the form
+                    form.addEventListener('submit', (e) => {
+                        // Log to the console that the form was submitted
+                        console.log('📝 Form submitted');
+                        // Prevent the default form submission (which would reload the page)
+                        e.preventDefault();
+                        // Call the custom form submission handler method
+                        this.handleFormSubmit(e);
+                    });
+                    // Log that the form event listener was added
+                    console.log('✅ Form event listener added');
+                } else {
+                    // If the form was not found, log an error
+                    console.error('❌ Transaction form not found!');
+                }
+
+                // Add an event listener to the entire document for all click events
+                document.addEventListener('click', (e) => {
+                    // Check if the clicked element has the class 'btn-delete'
+                    if (e.target.matches('.btn-delete')) {
+                        // Log to the console that a delete button was clicked
+                        console.log('🗑️ Delete button clicked');
+                        // Get the transaction ID from the button's data-id attribute and convert it to a number
+                        const id = parseInt(e.target.dataset.id);
+                        // Call the method to delete the transaction with this ID
+                        this.deleteTransaction(id);
+                    }
+                });
+                
+                // Log that event delegation is set up
+                console.log('✅ Event delegation set up');
+            }
+
+            // This method is called when the form is submitted
+            async handleFormSubmit(e) {
+                try {
+                    // Get all the data from the form fields as an object
+                    const formData = this.getFormData();
+                    
+                    // Validate the form data; throws an error if invalid
+                    this.validateTransaction(formData);
+                    
+                    // Add the new transaction to the list (wait for async completion)
+                    await this.addTransaction(formData);
+                    
+                    // Show a success message to the user
+                    this.showSuccess('Transaction added successfully! 🎉');
+                    // Clear all form fields for the next entry
+                    this.clearForm();
+                    
+                } catch (error) {
+                    // If an error occurs, show the error message to the user
+                    this.showError(error.message);
+                    // Also log the error to the console for debugging
+                    console.error('Transaction error:', error);
+                }
+            }
+
+            // This method extracts all values from the transaction form and returns them as an object
+            getFormData() {
+                // Get the form element from the DOM
+                const form = document.getElementById('transactionForm');
+                // Create a FormData object from the form (not strictly needed here, but shows modern usage)
+                const formData = new FormData(form);
+                
+                // Return an object with all form values, formatted as needed
+                return {
+                    // Generate a unique transaction ID using the current timestamp
+                    id: Date.now(),
+                    // Get the value of the description input, remove leading/trailing spaces
+                    description: form.description.value.trim(),
+                    // Get the value of the amount input and convert it to a floating-point number
+                    amount: parseFloat(form.amount.value),
+                    // Get the selected value for transaction type (income or expense)
+                    type: form.type.value,
+                    // Get the selected category, or use 'other' if none selected
+                    category: form.category.value || 'other',
+                    // Get the value of the notes textarea, remove leading/trailing spaces
+                    notes: form.notes.value.trim(),
+                    // Set the transaction date to the current date and time in ISO format
+                    date: new Date().toISOString()
+                };
+            }
+
+            // This method checks if the transaction data is valid, and throws an error if not
+            validateTransaction(transaction) {
+                // Use destructuring to get description, amount, and type from the transaction object
+                const { description, amount, type } = transaction;
+                
+                // If the description is empty, throw an error
+                if (!description) {
+                    throw new Error('Description is required');
+                }
+                
+                // If the amount is not provided or is less than or equal to zero, throw an error
+                if (!amount || amount <= 0) {
+                    throw new Error('Amount must be greater than 0');
+                }
+                
+                // If the transaction type is not selected, throw an error
+                if (!type) {
+                    throw new Error('Transaction type is required');
+                }
+
+                // If the description is too short, throw an error
+                if (description.length < 3) {
+                    throw new Error('Description must be at least 3 characters long');
+                }
+
+                // If the amount is suspiciously large, throw an error
+                if (amount > 1000000) {
+                    throw new Error('Amount seems too large. Please check.');
+                }
+            }
+
+            // This method adds a new transaction to the transactions array and updates the UI
+            async addTransaction(transaction) {
+                // Wait for 300 milliseconds to simulate a network/API delay (for demo purposes)
+                await this.delay(300);
+                
+                // Add the new transaction object to the beginning of the transactions array
+                this.transactions.unshift(transaction);
+                // Save the updated transactions array to localStorage
+                this.saveTransactions();
+                // Recalculate and update the statistics (income, expense, balance)
+                this.updateStats();
+                // Re-render the list of transactions in the UI
+                this.renderTransactions();
+            }
+
+            // This method deletes a transaction by its ID after asking the user for confirmation
+            deleteTransaction(id) {
+                // Show a confirmation dialog to the user; if they click OK, proceed
+                if (confirm('Are you sure you want to delete this transaction?')) {
+                    // Filter out the transaction with the given ID from the array
+                    this.transactions = this.transactions.filter(t => t.id !== id);
+                    // Save the updated array to localStorage
+                    this.saveTransactions();
+                    // Update the statistics
+                    this.updateStats();
+                    // Re-render the transaction list
+                    this.renderTransactions();
+                    // Show a success message to the user
+                    this.showSuccess('Transaction deleted! 🗑️');
+                }
+            }
+
+            // This method calculates and updates the total income, expense, and balance in the UI
+            updateStats() {
+                // Use the reduce method to sum up all income and expense amounts
+                const stats = this.transactions.reduce((acc, transaction) => {
+                    // If the transaction type is 'income', add its amount to the income total
+                    if (transaction.type === 'income') {
+                        acc.income += transaction.amount;
+                    // If the transaction type is 'expense', add its amount to the expense total
+                    } else if (transaction.type === 'expense') {
+                        acc.expense += transaction.amount;
+                    }
+                    // Return the accumulator object for the next iteration
+                    return acc;
+                }, { income: 0, expense: 0 }); // Start with income and expense both at 0
+
+                // Calculate the balance by subtracting total expenses from total income
+                const balance = stats.income - stats.expense;
+
+                // Update the DOM elements to show the formatted income, expense, and balance values
+                document.getElementById('totalIncome').textContent = this.formatCurrency(stats.income);
+                document.getElementById('totalExpense').textContent = this.formatCurrency(stats.expense);
+                document.getElementById('totalBalance').textContent = this.formatCurrency(balance);
+
+                // Get the balance element from the DOM
+                const balanceElement = document.getElementById('totalBalance');
+                // Set the class name based on whether the balance is positive (income) or negative (expense)
+                balanceElement.className = `stat-value ${balance >= 0 ? 'income' : 'expense'}`;
+            }
+
+            // This method updates the list of transactions shown in the UI
+            renderTransactions() {
+                // Get the container element where transactions are displayed
+                const container = document.getElementById('transactionsList');
+                
+                // If there are no transactions, show a friendly message
+                if (this.transactions.length === 0) {
+                    container.innerHTML = `
+                        <p style="text-align: center; color: #666; padding: 40px;">
+                            No transactions yet. Add your first transaction! 🚀
+                        </p>
+                    `;
+                    return;
+                }
+
+                // For up to the 10 most recent transactions, create HTML for each
+                const transactionHTML = this.transactions
+                    .slice(0, 10) // Only show the last 10 transactions
+                    .map(transaction => this.createTransactionHTML(transaction)) // Convert each transaction to HTML
+                    .join(''); // Combine all HTML strings into one
+
+                // Set the container's HTML to the generated transaction list
+                container.innerHTML = transactionHTML;
+            }
+
+            // This method returns the HTML string for a single transaction
+            createTransactionHTML(transaction) {
+                // Use destructuring to extract values from the transaction object
+                const { id, description, amount, type, category, notes, date } = transaction;
+                // Format the date as a readable string (e.g., 6/26/2025)
+                const formattedDate = new Date(date).toLocaleDateString();
+                // Get the emoji for the transaction's category
+                const categoryEmoji = this.getCategoryEmoji(category);
+                
+                // Return a template string containing the HTML for this transaction
+                return `
+                    <div class="transaction-item">
+                        <div class="transaction-details">
+                            <h4>${categoryEmoji} ${description}</h4>
+                            <p>${formattedDate} • ${category} ${notes ? `• ${notes}` : ''}</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div class="transaction-amount ${type}">
+                                ${type === 'income' ? '+' : '-'}${this.formatCurrency(amount)}
+                            </div>
+                            <button class="btn btn-danger btn-delete" data-id="${id}">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // This method returns an emoji for a given category string
+            getCategoryEmoji(category) {
+                // Define a mapping from category names to emoji
+                const emojiMap = {
+                    food: '🍕',
+                    transport: '🚗',
+                    entertainment: '🎬',
+                    bills: '📄',
+                    salary: '💼',
+                    other: '📦'
+                };
+                // Return the emoji for the category, or a box if not found
+                return emojiMap[category] || '📦';
+            }
+
+            // Fetches exchange rates from APIs and updates UI, with error fallback
+            async fetchExchangeRates() {
+                const loadingElement = document.getElementById('currencyLoading');
+                const errorElement = document.getElementById('currencyError');
+
+                try {
+                    loadingElement.style.display = 'block'; // Show loading
+                    errorElement.style.display = 'none'; // Hide error
+
+                    // Try multiple APIs with timeout
+                    const exchangeData = await this.tryMultipleAPIs();
+                    this.exchangeRates = exchangeData;
+                    
+                    this.renderExchangeRates(); // Update UI
+                    console.log('✅ Exchange rates loaded successfully');
+
+                } catch (error) {
+                    console.warn('All exchange rate APIs failed, using demo data:', error.message);
+                    
+                    // Use realistic demo data with current date
+                    this.exchangeRates = this.generateDemoExchangeRates();
+                    this.renderExchangeRates();
+                    
+                    // Show user-friendly message
+                    errorElement.innerHTML = `
+                        <strong>Demo Mode:</strong> Using sample exchange rates. 
+                        <small>In a real environment, this would fetch live data.</small>
+                    `;
+                    errorElement.style.display = 'block';
+                    errorElement.style.background = '#fff3cd';
+                    errorElement.style.color = '#856404';
+                    errorElement.style.borderColor = '#ffeaa7';
+                    
+                } finally {
+                    loadingElement.style.display = 'none'; // Hide loading
+                }
+            }
+
+            // Try multiple APIs with proper error handling
+            async tryMultipleAPIs() {
+                const apis = [
+                    {
+                        url: 'https://api.fxratesapi.com/latest',
+                        transform: (data) => data.rates
+                    },
+                    {
+                        url: 'https://api.exchangerate.host/latest?base=USD',
+                        transform: (data) => data.rates
+                    }
+                ];
+
+                for (const api of apis) {
+                    try {
+                        console.log(`Trying API: ${api.url}`);
+                        const response = await this.fetchWithTimeout(api.url, 5000);
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+
+                        const data = await response.json();
+                        
+                        if (!data || !data.rates) {
+                            throw new Error('Invalid API response format');
+                        }
+
+                        return api.transform(data);
+                        
+                    } catch (error) {
+                        console.warn(`API ${api.url} failed:`, error.message);
+                        continue;
+                    }
+                }
+
+                throw new Error('All exchange rate APIs failed');
+            }
+
+            // Fetch with timeout
+            async fetchWithTimeout(url, timeout = 5000) {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+                try {
+                    const response = await fetch(url, {
+                        signal: controller.signal,
+                        headers: {
+                            'Accept': 'application/json',
+                        }
+                    });
+                    clearTimeout(timeoutId);
+                    return response;
+                } catch (error) {
+                    clearTimeout(timeoutId);
+                    if (error.name === 'AbortError') {
+                        throw new Error('Request timeout');
+                    }
+                    throw error;
+                }
+            }
+
+            // Generate realistic demo exchange rates
+            generateDemoExchangeRates() {
+                const baseRates = {
+                    EUR: 0.85,
+                    GBP: 0.73,
+                    JPY: 110.12,
+                    INR: 83.25,
+                    CAD: 1.25,
+                    AUD: 1.35,
+                    CHF: 0.88,
+                    CNY: 7.15,
+                    SEK: 9.75,
+                    NOK: 10.25
+                };
+
+                // Add some realistic daily fluctuation
+                const fluctuatedRates = {};
+                Object.entries(baseRates).forEach(([currency, rate]) => {
+                    const fluctuation = (Math.random() - 0.5) * 0.04; // ±2% fluctuation
+                    fluctuatedRates[currency] = Number((rate * (1 + fluctuation)).toFixed(4));
+                });
+
+                return fluctuatedRates;
+            }
+
+            // Render exchange rates with enhanced display
+            renderExchangeRates() {
+                const gridElement = document.getElementById('currencyGrid');
+                const currencyInfo = {
+                    EUR: { name: 'Euro', flag: '🇪🇺' },
+                    GBP: { name: 'British Pound', flag: '🇬🇧' },
+                    JPY: { name: 'Japanese Yen', flag: '🇯🇵' },
+                    INR: { name: 'Indian Rupee', flag: '🇮🇳' },
+                    CAD: { name: 'Canadian Dollar', flag: '🇨🇦' },
+                    AUD: { name: 'Australian Dollar', flag: '🇦🇺' },
+                    CHF: { name: 'Swiss Franc', flag: '🇨🇭' },
+                    CNY: { name: 'Chinese Yuan', flag: '🇨🇳' }
+                };
+                
+                const currencyHTML = Object.entries(this.exchangeRates)
+                    .filter(([currency]) => currencyInfo[currency])
+                    .slice(0, 8) // Show top 8 currencies
+                    .map(([currency, rate]) => {
+                        const info = currencyInfo[currency];
+                        const trend = this.generateTrend(); // Simulate trend
+                        return `
+                            <div class="currency-card" title="${info.name}">
+                                <div style="font-size: 1.2em;">${info.flag}</div>
+                                <strong>${currency}</strong>
+                                <div style="font-size: 1.1em; font-weight: bold;">
+                                    ${rate.toFixed(4)}
+                                </div>
+                                <div style="font-size: 0.8em; color: ${trend.color};">
+                                    ${trend.symbol} ${trend.change}%
+                                </div>
+                            </div>
+                        `;
+                    })
+                    .join('');
+
+                gridElement.innerHTML = currencyHTML;
+            }
+
+            // Generate simulated trend data
+            generateTrend() {
+                const change = (Math.random() * 4 - 2).toFixed(2); // -2% to +2%
+                return {
+                    change: Math.abs(change),
+                    color: change >= 0 ? '#28a745' : '#dc3545',
+                    symbol: change >= 0 ? '↗' : '↘'
+                };
+            }
+
+            // Utility functions
+            formatCurrency(amount) {
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD'
+                }).format(amount);
+            }
+
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            showError(message) {
+                const errorElement = document.getElementById('errorMessage');
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+                setTimeout(() => {
+                    errorElement.style.display = 'none';
+                }, 5000);
+            }
+
+            showSuccess(message) {
+                const successElement = document.getElementById('successMessage');
+                successElement.textContent = message;
+                successElement.style.display = 'block';
+                setTimeout(() => {
+                    successElement.style.display = 'none';
+                }, 3000);
+            }
+
+            clearForm() {
+                document.getElementById('transactionForm').reset();
+            }
+
+            // Local storage functions (using try-catch for error handling)
+            saveTransactions() {
+                try {
+                    const data = JSON.stringify(this.transactions);
+                    // Note: In Claude.ai artifacts, localStorage isn't available
+                    // This would work in a real browser environment
+                    if (typeof Storage !== 'undefined') {
+                        localStorage.setItem('financeTracker', data);
+                    }
+                } catch (error) {
+                    console.warn('Could not save to localStorage:', error);
+                }
+            }
+
+            loadTransactions() {
+                try {
+                    if (typeof Storage !== 'undefined') {
+                        const data = localStorage.getItem('financeTracker');
+                        return data ? JSON.parse(data) : this.getSampleData();
+                    }
+                    return this.getSampleData();
+                } catch (error) {
+                    console.warn('Could not load from localStorage:', error);
+                    return this.getSampleData();
+                }
+            }
+
+            // Provide sample data for demonstration
+            getSampleData() {
+                return [
+                    {
+                        id: 1,
+                        description: 'Salary Payment',
+                        amount: 3000,
+                        type: 'income',
+                        category: 'salary',
+                        notes: 'Monthly salary',
+                        date: new Date(Date.now() - 86400000).toISOString()
+                    },
+                    {
+                        id: 2,
+                        description: 'Grocery Shopping',
+                        amount: 125.50,
+                        type: 'expense',
+                        category: 'food',
+                        notes: 'Weekly groceries',
+                        date: new Date(Date.now() - 172800000).toISOString()
+                    },
+                    {
+                        id: 3,
+                        description: 'Movie Night',
+                        amount: 45.00,
+                        type: 'expense',
+                        category: 'entertainment',
+                        notes: 'Date night',
+                        date: new Date(Date.now() - 259200000).toISOString()
+                    }
+                ];
+            }
+        }
+
+        // Initialize the application when DOM is loaded
+        function initApp() {
+            console.log('🚀 Finance Tracker initializing...');
+            
+            try {
+                const app = new FinanceTracker();
+                console.log('✅ Finance Tracker initialized successfully!');
+                console.log('Sample transactions loaded:', app.transactions.length);
+                
+                // Add to global scope for debugging
+                window.financeApp = app;
+                
+                // Test the form
+                console.log('Form element found:', !!document.getElementById('transactionForm'));
+                
+            } catch (error) {
+                console.error('❌ Failed to initialize Finance Tracker:', error);
+                console.error('Error details:', error.stack);
+            }
+        }
+
+        // Multiple initialization attempts
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            // DOM already loaded
+            initApp();
+        }
+
+        // Fallback initialization
+        window.addEventListener('load', () => {
+            if (!window.financeApp) {
+                console.log('🔄 Fallback initialization...');
+                initApp();
+            }
+        });
+
+        // Test function to verify app is working
+        function testApp() {
+            console.log('🧪 Testing app...');
+            
+            if (window.financeApp) {
+                console.log('✅ App instance found');
+                console.log('📊 Current transactions:', window.financeApp.transactions.length);
+                console.log('💱 Exchange rates loaded:', Object.keys(window.financeApp.exchangeRates).length);
+                
+                // Add a test transaction
+                const testTransaction = {
+                    id: Date.now(),
+                    description: 'Test Transaction',
+                    amount: 100,
+                    type: 'income',
+                    category: 'other',
+                    notes: 'Automated test',
+                    date: new Date().toISOString()
+                };
+                
+                window.financeApp.transactions.unshift(testTransaction);
+                window.financeApp.updateStats();
+                window.financeApp.renderTransactions();
+                
+                alert('✅ Test successful! Check console for details.');
+            } else {
+                console.error('❌ App not initialized');
+                alert('❌ App not working. Check console for errors.');
+            }
+        }
+
+        // Service Worker registration for offline functionality (advanced concept)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // This would register a service worker in a production app
+                console.log('Service Worker support detected');
+            });
+        }
+    </script>
+</body>
+</html>
